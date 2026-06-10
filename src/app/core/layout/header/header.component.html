@@ -1,0 +1,31 @@
+<mat-toolbar class="header-toolbar">
+  <a routerLink="/" class="logo">
+    <img src="/assets/logo.png" alt="Kovai 641 News Logo" class="logo-img">
+  </a>
+
+  <div class="nav-links">
+    <button mat-button routerLink="/category/coimbatore">Coimbatore</button>
+    <button mat-button routerLink="/category/tamil-nadu">Tamil Nadu</button>
+    <button mat-button routerLink="/videos">Videos</button>
+    <button mat-button routerLink="/map">Local Map</button>
+  </div>
+
+  <div class="actions">
+    <button mat-icon-button (click)="toggleTheme()" aria-label="Toggle Theme">
+      <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+    <button mat-icon-button aria-label="User Account">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <button mat-icon-button class="mobile-menu" [matMenuTriggerFor]="menu" aria-label="Menu" style="display: inline-block;">
+      <mat-icon>menu</mat-icon>
+    </button>
+    
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item routerLink="/category/coimbatore">Coimbatore</button>
+      <button mat-menu-item routerLink="/category/tamil-nadu">Tamil Nadu</button>
+      <button mat-menu-item routerLink="/videos">Videos</button>
+      <button mat-menu-item routerLink="/map">Local Map</button>
+    </mat-menu>
+  </div>
+</mat-toolbar>
