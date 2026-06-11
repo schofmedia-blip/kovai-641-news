@@ -4,7 +4,7 @@ import { AdBannerComponent } from '../../shared/components/ad-banner/ad-banner.c
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatChipsModule, MatChipListboxChange } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { gsap } from 'gsap';
 
@@ -37,11 +37,20 @@ interface NewsItem {
 
       <app-ad-banner height="120px"></app-ad-banner>
 
+      <!-- Category Filter -->
+      <section class="category-filter gsap-reveal">
+        <mat-chip-listbox (change)="onCategoryChange($event)" aria-label="News Categories">
+          <mat-chip-option *ngFor="let cat of categories" [value]="cat" [selected]="selectedCategory === cat">
+            {{ cat }}
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </section>
+
       <!-- Latest News -->
       <section class="latest-news gsap-reveal">
-        <h2>Latest News (TN, Kerala, India)</h2>
+        <h2>{{ selectedCategory }} News</h2>
         <div class="news-grid">
-          <mat-card *ngFor="let news of latestNews" class="news-card">
+          <mat-card *ngFor="let news of filteredNews" class="news-card">
             <div class="image-container">
               <img mat-card-image [src]="news.imageUrl" [alt]="news.title">
               <div *ngIf="news.hasVideo" class="video-badge">
@@ -58,12 +67,16 @@ interface NewsItem {
             </mat-card-actions>
           </mat-card>
         </div>
+        
+        <div *ngIf="filteredNews.length === 0" class="no-news">
+          <p>No news available for {{ selectedCategory }} at the moment.</p>
+        </div>
       </section>
     </div>
   `,
   styles: [`
     .hero-section {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1572204292164-b35ba943fca7?q=80&w=1200&auto=format&fit=crop') no-repeat center center;
+      background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?q=80&w=1200&auto=format&fit=crop') no-repeat center center;
       background-size: cover;
       color: white;
       padding: 4rem 2rem;
@@ -81,6 +94,11 @@ interface NewsItem {
       font-weight: 900;
       margin: 1rem 0;
       line-height: 1.2;
+    }
+    .category-filter {
+      margin: 2rem 0;
+      display: flex;
+      justify-content: center;
     }
     .news-grid {
       display: grid;
@@ -167,18 +185,66 @@ interface NewsItem {
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .no-news {
+      text-align: center;
+      padding: 3rem;
+      color: #777;
+      font-size: 1.1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
   `]
 })
 export class HomeComponent implements OnInit, AfterViewInit {
-  latestNews: NewsItem[] = [
+  categories: string[] = ['Coimbatore', 'Tamil Nadu', 'Kerala', 'India'];
+  selectedCategory: string = 'Coimbatore';
+
+  allNews: NewsItem[] = [
+    // Coimbatore News
+    {
+      id: 101,
+      title: 'Coimbatore to Get New Metro Expansion by 2026',
+      description: 'The state government has announced the expansion of the metro project covering major hubs like Gandhipuram and Ukkadam.',
+      imageUrl: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?q=80&w=600&auto=format&fit=crop',
+      category: 'Coimbatore',
+      hasVideo: true
+    },
+    {
+      id: 102,
+      title: 'Heavy Traffic Expected in Avinashi Road Due to Flyover Work',
+      description: 'Commuters are advised to take alternate routes as the Avinashi road flyover construction enters its final phase.',
+      imageUrl: 'https://images.unsplash.com/photo-1506751470038-d52361f1b212?q=80&w=600&auto=format&fit=crop',
+      category: 'Coimbatore',
+      hasVideo: false
+    },
+    {
+      id: 103,
+      title: 'Siruvani Dam Water Level Rises After Continuous Showers',
+      description: 'Continuous rainfall in the catchment areas has increased the water level in Siruvani dam, bringing relief to Coimbatore residents.',
+      imageUrl: 'https://images.unsplash.com/photo-1541888087405-b003c3e2dc40?q=80&w=600&auto=format&fit=crop',
+      category: 'Coimbatore',
+      hasVideo: true
+    },
+
+    // Tamil Nadu News
     {
       id: 1,
       title: 'CM Orders 24x7 Drinking Water Supply in All TN Municipal Corporations',
       description: 'Chief Minister has directed officials to ensure uninterrupted drinking water supply across all 25 municipal corporations in Tamil Nadu to tackle water scarcity.',
-      imageUrl: 'https://images.unsplash.com/photo-1541888087405-b003c3e2dc40?q=80&w=600&auto=format&fit=crop',
+      imageUrl: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?q=80&w=600&auto=format&fit=crop',
       category: 'Tamil Nadu',
       hasVideo: false
     },
+    {
+      id: 6,
+      title: 'Tamil Nadu Government Launches "Singappen" Special Force',
+      description: "To enhance women's safety in the state, the Tamil Nadu government has officially launched the Singappen special police force.",
+      imageUrl: 'https://images.unsplash.com/photo-1576089172869-4f5f6f315620?q=80&w=600&auto=format&fit=crop',
+      category: 'Tamil Nadu',
+      hasVideo: true
+    },
+
+    // Kerala News
     {
       id: 2,
       title: 'Heavy Rains & Thunderstorms Forecast for Kerala Amid Southwest Monsoon',
@@ -191,10 +257,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
       id: 3,
       title: 'Kerala Cabinet Approves "Priyadarshini" Free Travel Scheme for Women',
       description: 'Starting June 15, women in Kerala can travel for free on KSRTC ordinary services under the newly launched Priyadarshini scheme.',
-      imageUrl: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=600&auto=format&fit=crop',
+      imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=600&auto=format&fit=crop',
       category: 'Kerala',
       hasVideo: false
     },
+
+    // India News
     {
       id: 4,
       title: 'PM Modi to Hold Key Meeting with NDA Chief Ministers Today',
@@ -210,16 +278,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
       imageUrl: 'https://images.unsplash.com/photo-1584285404554-159424750e41?q=80&w=600&auto=format&fit=crop',
       category: 'India',
       hasVideo: false
-    },
-    {
-      id: 6,
-      title: 'Tamil Nadu Government Launches "Singappen" Special Force',
-      description: "To enhance women's safety in the state, the Tamil Nadu government has officially launched the Singappen special police force.",
-      imageUrl: 'https://images.unsplash.com/photo-1605371924599-2d0365da26f5?q=80&w=600&auto=format&fit=crop',
-      category: 'Tamil Nadu',
-      hasVideo: true
     }
   ];
+
+  get filteredNews() {
+    return this.allNews.filter(news => news.category === this.selectedCategory);
+  }
 
   ngOnInit() {}
 
@@ -234,5 +298,21 @@ export class HomeComponent implements OnInit, AfterViewInit {
       ease: 'power3.out',
       delay: 0.2
     });
+  }
+
+  onCategoryChange(event: MatChipListboxChange) {
+    if (event.value) {
+      this.selectedCategory = event.value;
+    } else {
+      // If user clicks the already selected chip, it might deselect. We force it back.
+      this.selectedCategory = 'Coimbatore';
+    }
+    
+    setTimeout(() => {
+      gsap.fromTo('.news-card', 
+        { y: 30, opacity: 0 }, 
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out' }
+      );
+    }, 50);
   }
 }
